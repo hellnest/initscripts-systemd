@@ -7,6 +7,7 @@
 
 [[ $1 ]] || exit 1
 
+<<<<<<< HEAD
 # when called at boot, this is /dev/.systemd/generator-$rand
 dest=$1
 
@@ -15,11 +16,20 @@ create_unit() {
   local daemon=${1%.service}
 
   printf "
+=======
+# The first argument is the path to which the generated files should be written
+dest=$1
+
+# Make service file
+start_daemon() {
+cat > "$dest/$service" <<EOF
+>>>>>>> upstream/teg-generator
 [Unit]
 Description=Legacy unit for $1
 After=$2
 
 [Service]
+<<<<<<< HEAD
 ExecStart=/etc/rc.d/$daemon start
 ExecStop=/etc/rc.d/$daemon stop
 RemainAfterExit=yes
@@ -38,6 +48,26 @@ for daemon in "${DAEMONS[@]}"; do
     *) create_unit $service $dep
        dep=$service ;;
    esac
+=======
+ExecStart=/etc/rc.d/$1 start
+ExecStop=/etc/rc.d/$1 stop
+RemainAfterExit=yes
+Type=forking
+EOF
+}
+
+/bin/mkdir -p $dest/arch-daemons.target.wants
+# Start daemons
+for daemon in "${DAEMONS[@]}"; do
+  case ${daemon:0:1} in
+    '!') continue ;;
+    '@') start_daemon ${daemon:1} $prev $service
+    *) start_daemon $daemon $prev $service
+       prev=$service ;;
+   esac
+
+  /bin/ln -s ../${service#@} $dest/arch-daemons.target.wants/${service#@}
+>>>>>>> upstream/teg-generator
 done
 
 # vim: et sw=2:
